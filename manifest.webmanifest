@@ -1,0 +1,12 @@
+{
+  "name": "Playground — Game Collection",
+  "short_name": "Playground",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101126",
+  "theme_color": "#10132a",
+  "description": "An offline-ready collection of small games.",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
