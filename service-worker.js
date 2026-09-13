@@ -1,8 +1,9 @@
 /*
  * Keep the launcher usable without a connection, but never let the Cache
  * Storage copy hide a responsive newer deployment. Every same-origin GET is
- * requested from the server first with the browser HTTP cache bypassed.
- * Cached content is used only when that request fails or times out.
+ * requested from the server first with the browser HTTP cache bypassed. Cached
+ * content is used only when that request fails or takes longer than
+ * NETWORK_TIMEOUT_MS.
  */
 const CACHE_NAME = "playground-game-launcher-shell";
 const NETWORK_TIMEOUT_MS = 3000;
@@ -38,6 +39,7 @@ async function fetchWithTimeout(request) {
   const timeoutId = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
 
   try {
+    // "no-store" also avoids a stale entry in the browser's HTTP cache.
     return await fetch(request, { cache: "no-store", signal: controller.signal });
   } finally {
     clearTimeout(timeoutId);
@@ -79,7 +81,7 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // The individual GitHub-hosted games manage their own offline caches.
+  // Let the browser handle analytics and other cross-origin requests normally.
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
   event.respondWith((async () => {
@@ -87,10 +89,14 @@ self.addEventListener("fetch", (event) => {
       const response = await fetchWithTimeout(request);
 
       if (response.ok) {
+        // Write before responding so the next offline request has the fresh
+        // copy available. A cache-write failure must not block the live app.
         await cacheResponse(request, response).catch(() => {});
         return response;
       }
 
+      // A real client error, such as a missing path, should not be replaced by
+      // an older cached page. For temporary server failures, use the app copy.
       if (response.status < 500) return response;
     } catch {
       // The cache fallback below handles offline and timed-out requests.
