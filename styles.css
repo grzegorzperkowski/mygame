@@ -51,13 +51,12 @@ h1 em { color: #a89aff; font-family: Georgia, "Times New Roman", serif; font-wei
 
 .game-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
 .game-card { position: relative; display: flex; grid-column: span 2; min-height: 332px; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 22px; padding: 23px; color: var(--ink); background: var(--surface); box-shadow: 0 14px 40px rgba(3, 3, 17, .14); isolation: isolate; text-decoration: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s ease, box-shadow .35s ease; }
-.fifteen-puzzle { grid-column: 2 / span 2; }.blockfall { grid-column: 4 / span 2; }
 .game-card::after { position: absolute; z-index: -1; inset: 0; content: ""; background: linear-gradient(135deg, rgba(255,255,255,.09), transparent 44%); opacity: .5; transition: opacity .35s ease; }
 .card-glow { position: absolute; z-index: -1; top: -70px; right: -70px; width: 200px; height: 200px; border-radius: 50%; filter: blur(2px); opacity: .22; transform: scale(.75); transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
-.minesweeper .card-glow { background: #fa6f88; }.sudoku .card-glow { background: #8f79fa; }.twenty-forty-eight .card-glow { background: #ffc66b; }.fifteen-puzzle .card-glow { background: #50d7d0; }.blockfall .card-glow { background: #a8e76d; }
+.minesweeper .card-glow { background: #fa6f88; }.sudoku .card-glow { background: #8f79fa; }.twenty-forty-eight .card-glow { background: #ffc66b; }.fifteen-puzzle .card-glow { background: #50d7d0; }.blockfall .card-glow { background: #a8e76d; }.matematyka .card-glow { background: #ff9d4d; }
 .game-icon { display: grid; width: 64px; height: 64px; place-items: center; border-radius: 18px; color: #ff8297; background: rgba(255, 118, 144, .12); transition: transform .45s cubic-bezier(.2,.8,.2,1), background .35s ease; }
 .game-icon svg { width: 52px; height: 52px; }
-.icon-sudoku { color: #ab9bff; background: rgba(149,124,255,.13); }.icon-2048 { color: #ffd174; background: rgba(255,198,100,.12); }.icon-fifteen-puzzle { color: #66ded4; background: rgba(75,213,203,.13); }.icon-blockfall { color: #aeea72; background: rgba(162,226,101,.13); }
+.icon-sudoku { color: #ab9bff; background: rgba(149,124,255,.13); }.icon-2048 { color: #ffd174; background: rgba(255,198,100,.12); }.icon-fifteen-puzzle { color: #66ded4; background: rgba(75,213,203,.13); }.icon-blockfall { color: #aeea72; background: rgba(162,226,101,.13); }.icon-matematyka { color: #ffab5c; background: rgba(255,157,77,.13); }
 .game-info { display: flex; flex-grow: 1; flex-direction: column; margin-top: 28px; }
 .game-type { margin-bottom: 8px; color: #a6a5ba; font: 500 9px/1 "DM Mono", monospace; letter-spacing: .13em; }
 .game-title { font-size: 25px; font-weight: 700; letter-spacing: -.055em; }
