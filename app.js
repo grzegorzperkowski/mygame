@@ -23,14 +23,12 @@ function renderResults() {
   }
 }
 
-document.querySelector("#persist-button")?.addEventListener("click", async event => {
-  const button = event.currentTarget;
-  if (!navigator.storage?.persist) { button.textContent = "Storage persistence is not supported here"; button.disabled = true; return; }
-  try {
-    const granted = await navigator.storage.persist();
-    button.textContent = granted ? "Offline games protected on this device" : "Browser will manage offline storage";
-  } catch { button.textContent = "Could not change storage settings"; }
-  button.disabled = true;
+function requestPersistentStorage() {
+  navigator.storage?.persist?.().catch(() => {});
+}
+
+document.querySelectorAll(".game-card").forEach(card => {
+  card.addEventListener("pointerdown", requestPersistentStorage, { once: true, passive: true });
 });
 
 window.addEventListener("online", updateConnectionStatus);

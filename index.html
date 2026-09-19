@@ -21,7 +21,19 @@
     <main class="page-shell">
       <header class="topbar">
         <a class="brand" href="#top" aria-label="Playground home">
-          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="-214 -82 428 236" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="-178" y="-78" width="356" height="156" rx="78" fill="#A89AFF"/>
+              <circle cx="-138" cy="78" r="72" fill="#A89AFF"/>
+              <circle cx="138" cy="78" r="72" fill="#A89AFF"/>
+              <rect x="-168" y="-32" width="72" height="22" rx="7" fill="#101126"/>
+              <rect x="-143" y="-57" width="22" height="72" rx="7" fill="#101126"/>
+              <circle cx="118" cy="-36" r="20" fill="#FFC66B"/>
+              <circle cx="158" cy="2" r="20" fill="#FA6F88"/>
+              <circle cx="78" cy="2" r="20" fill="#50D7D0"/>
+              <circle cx="118" cy="40" r="20" fill="#A8E76D"/>
+            </svg>
+          </span>
           <span>Playground</span>
         </a>
         <div class="connection" aria-live="polite">
@@ -38,7 +50,6 @@
         </p>
         <div class="pwa-actions" aria-label="App controls">
           <button id="install-button" type="button" hidden>Install Playground</button>
-          <button id="persist-button" type="button">Keep games available offline</button>
           <p id="install-help">On Android, you can also use Chrome’s menu and choose “Install app”.</p>
           <p id="offline-status" role="status" aria-live="polite">Preparing offline games…</p>
         </div>

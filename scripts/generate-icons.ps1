@@ -5,7 +5,6 @@ $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Drawing
 $sourcesRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\.."))
 $items = @(
-  @{ Repository = "mygame"; Directory = "assets"; Label = "P"; Background = "#101126"; Accent = "#a89aff"; RootNames = $true },
   @{ Repository = "15puzzle"; Directory = "assets/icons"; Label = "15"; Background = "#f2efe8"; Accent = "#25a9a2" },
   @{ Repository = "2048"; Directory = "assets/icons"; Label = "2048"; Background = "#faf8ef"; Accent = "#edc22e" },
   @{ Repository = "Blockfall"; Directory = "assets/icons"; Label = "B"; Background = "#101416"; Accent = "#9ee46a" },
@@ -51,4 +50,4 @@ foreach ($item in $items) {
   New-Icon (Join-Path $directory "apple-touch-icon.png") 180 $item.Label $item.Background $item.Accent $false
 }
 
-Write-Host "Generated launcher and standalone PWA icon sets."
+Write-Host "Generated standalone PWA icon sets. Playground launcher icons are drawn from assets/icon.svg."

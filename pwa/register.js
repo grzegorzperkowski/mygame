@@ -55,6 +55,7 @@
   });
   installButton?.addEventListener("click", async () => {
     if (!installPrompt) return;
+    navigator.storage?.persist?.().catch(() => {});
     await installPrompt.prompt();
     await installPrompt.userChoice;
     installPrompt = null;
