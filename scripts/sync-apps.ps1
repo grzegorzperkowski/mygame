@@ -19,7 +19,10 @@ $launcherShellFiles = @(
   "index.html", "styles.css", "app.js", "manifest.webmanifest", "offline.html", "pwa/register.js",
   "assets/icon.svg", "assets/icon-192.png", "assets/icon-512.png",
   "assets/icon-maskable-192.png", "assets/icon-maskable-512.png", "assets/apple-touch-icon.png",
-  "assets/screenshots/playground-home.png", "assets/screenshots/playground-results.png"
+  "assets/screenshots/playground-home.png", "assets/screenshots/sudoku.png",
+  "assets/screenshots/minesweeper.png", "assets/screenshots/matematyka.png",
+  "assets/screenshots/blockfall.png", "assets/screenshots/2048.png",
+  "assets/screenshots/15puzzle.png"
 )
 
 function Assert-ChildPath([string]$Path, [string]$Parent, [string]$Label) {
@@ -146,7 +149,10 @@ try {
     "./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "offline.html", "pwa/register.js",
     "pwa/app-shell.js", "assets/icon.svg", "assets/icon-192.png", "assets/icon-512.png",
     "assets/icon-maskable-192.png", "assets/icon-maskable-512.png", "assets/apple-touch-icon.png",
-    "assets/screenshots/playground-home.png", "assets/screenshots/playground-results.png"
+    "assets/screenshots/playground-home.png", "assets/screenshots/sudoku.png",
+    "assets/screenshots/minesweeper.png", "assets/screenshots/matematyka.png",
+    "assets/screenshots/blockfall.png", "assets/screenshots/2048.png",
+    "assets/screenshots/15puzzle.png"
   ) + $appPaths
   $fallbacks = @(
     @("apps/matematyka/Chapter1/", "apps/matematyka/Chapter1/index.html"),
