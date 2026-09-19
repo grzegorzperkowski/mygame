@@ -10,6 +10,7 @@
     <meta name="theme-color" content="#10132a" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
     <title>Playground — Game Collection</title>
   </head>
@@ -35,17 +36,25 @@
         <p class="lede">
           A little collection of thoughtful games, ready whenever you are.
         </p>
+        <div class="pwa-actions" aria-label="App controls">
+          <button id="install-button" type="button" hidden>Install Playground</button>
+          <button id="persist-button" type="button">Keep games available offline</button>
+          <p id="install-help">On Android, you can also use Chrome’s menu and choose “Install app”.</p>
+          <p id="offline-status" role="status" aria-live="polite">Preparing offline games…</p>
+        </div>
+        <aside id="update-panel" class="update-panel" role="status" hidden>
+          <span>Update available. Your current game is saved before reload.</span>
+          <button id="update-button" type="button">Reload</button>
+        </aside>
       </section>
 
       <section class="game-grid" aria-label="Games">
         <a
           class="game-card minesweeper"
-          href="https://grzegorzperkowski.github.io/Minesweeper/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="apps/minesweeper/"
           data-goatcounter-click="minesweeper"
           data-goatcounter-referrer="mygame"
-          aria-label="Open Minesweeper in a new tab"
+          aria-label="Open Minesweeper"
         >
           <span class="card-glow" aria-hidden="true"></span>
           <span class="game-icon icon-mine" aria-hidden="true">
@@ -61,6 +70,7 @@
             <span class="game-type">CLASSIC LOGIC</span>
             <span class="game-title">Minesweeper</span>
             <span class="game-description">Clear the field. Trust your instincts.</span>
+            <span class="device-result" data-result="minesweeper">No completed results yet</span>
           </span>
           <span class="open-game" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -69,12 +79,10 @@
 
         <a
           class="game-card sudoku"
-          href="https://grzegorzperkowski.github.io/sudoku/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="apps/sudoku/"
           data-goatcounter-click="sudoku"
           data-goatcounter-referrer="mygame"
-          aria-label="Open Sudoku in a new tab"
+          aria-label="Open Sudoku"
         >
           <span class="card-glow" aria-hidden="true"></span>
           <span class="game-icon icon-sudoku" aria-hidden="true">
@@ -88,6 +96,7 @@
             <span class="game-type">QUIET FOCUS</span>
             <span class="game-title">Sudoku</span>
             <span class="game-description">Find the pattern. Complete the puzzle.</span>
+            <span class="device-result" data-result="sudoku">No completed results yet</span>
           </span>
           <span class="open-game" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -96,12 +105,10 @@
 
         <a
           class="game-card twenty-forty-eight"
-          href="https://grzegorzperkowski.github.io/2048/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="apps/2048/"
           data-goatcounter-click="2048"
           data-goatcounter-referrer="mygame"
-          aria-label="Open 2048 in a new tab"
+          aria-label="Open 2048"
         >
           <span class="card-glow" aria-hidden="true"></span>
           <span class="game-icon icon-2048" aria-hidden="true">
@@ -117,6 +124,7 @@
             <span class="game-type">NUMBER STRATEGY</span>
             <span class="game-title">2048</span>
             <span class="game-description">Merge, plan, and chase the next tile.</span>
+            <span class="device-result" data-result="2048">No completed results yet</span>
           </span>
           <span class="open-game" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -125,12 +133,10 @@
 
         <a
           class="game-card fifteen-puzzle"
-          href="https://grzegorzperkowski.github.io/15puzzle/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="apps/15puzzle/"
           data-goatcounter-click="15puzzle"
           data-goatcounter-referrer="mygame"
-          aria-label="Open 15 Puzzle in a new tab"
+          aria-label="Open 15 Puzzle"
         >
           <span class="card-glow" aria-hidden="true"></span>
           <span class="game-icon icon-fifteen-puzzle" aria-hidden="true">
@@ -161,6 +167,7 @@
             <span class="game-type">SLIDING CLASSIC</span>
             <span class="game-title">15 Puzzle</span>
             <span class="game-description">Slide the tiles. Bring order to the board.</span>
+            <span class="device-result" data-result="15puzzle">No completed results yet</span>
           </span>
           <span class="open-game" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -169,12 +176,10 @@
 
         <a
           class="game-card blockfall"
-          href="https://grzegorzperkowski.github.io/Blockfall/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="apps/blockfall/"
           data-goatcounter-click="blockfall"
           data-goatcounter-referrer="mygame"
-          aria-label="Open Blockfall in a new tab"
+          aria-label="Open Blockfall"
         >
           <span class="card-glow" aria-hidden="true"></span>
           <span class="game-icon icon-blockfall" aria-hidden="true">
@@ -201,6 +206,7 @@
             <span class="game-type">FALLING BLOCKS</span>
             <span class="game-title">Blockfall</span>
             <span class="game-description">Stack the blocks. Clear the lines.</span>
+            <span class="device-result" data-result="blockfall">No completed results yet</span>
           </span>
           <span class="open-game" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -209,12 +215,10 @@
 
         <a
           class="game-card matematyka"
-          href="https://grzegorzperkowski.github.io/Matematyka/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="apps/matematyka/"
           data-goatcounter-click="matematyka"
           data-goatcounter-referrer="mygame"
-          aria-label="Open Matematyka in a new tab"
+          aria-label="Open Matematyka"
         >
           <span class="card-glow" aria-hidden="true"></span>
           <span class="game-icon icon-matematyka" aria-hidden="true">
@@ -227,6 +231,7 @@
             <span class="game-type">MATH ADVENTURE</span>
             <span class="game-title">Matematyka</span>
             <span class="game-description">Explore, practise, and make numbers click.</span>
+            <span class="device-result" data-result="matematyka">No completed results yet</span>
           </span>
           <span class="open-game" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -240,6 +245,7 @@
       </footer>
     </main>
     <script src="app.js"></script>
+    <script src="pwa/register.js" defer></script>
   <script data-goatcounter="https://mygame.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
