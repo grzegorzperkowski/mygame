@@ -1,0 +1,89 @@
+name: Deploy Playground to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Playground
+        uses: actions/checkout@v4
+        with:
+          path: site
+
+      - name: Checkout 15puzzle
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/15puzzle
+          path: sources/15puzzle
+
+      - name: Checkout 2048
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/2048
+          path: sources/2048
+
+      - name: Checkout Blockfall
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/Blockfall
+          path: sources/Blockfall
+
+      - name: Checkout Minesweeper
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/Minesweeper
+          path: sources/Minesweeper
+
+      - name: Checkout sudoku
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/sudoku
+          path: sources/sudoku
+
+      - name: Checkout Matematyka
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/Matematyka
+          path: sources/Matematyka
+
+      - name: Assemble nested apps
+        working-directory: site
+        run: pwsh -File scripts/sync-apps.ps1 -SourcesRoot "${{ github.workspace }}/sources"
+
+      - name: Check assembled tree
+        working-directory: site
+        run: pwsh -File scripts/sync-apps.ps1 -SourcesRoot "${{ github.workspace }}/sources" -Check
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+          # Ship .nojekyll; the action drops dotfiles unless this is true.
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,19 +1,44 @@
 [CmdletBinding()]
-param([switch]$Check)
+param(
+  [switch]$Check,
+  [string]$SourcesRoot
+)
 
 $ErrorActionPreference = "Stop"
+$utf8 = [Text.UTF8Encoding]::new($false)
 $launcherRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$sourcesRoot = [IO.Path]::GetFullPath((Join-Path $launcherRoot ".."))
+if ([string]::IsNullOrWhiteSpace($SourcesRoot)) {
+  $SourcesRoot = Join-Path $launcherRoot ".."
+}
+$sourcesRoot = [IO.Path]::GetFullPath($SourcesRoot)
 $appsRoot = [IO.Path]::GetFullPath((Join-Path $launcherRoot "apps"))
 $stagingRoot = [IO.Path]::GetFullPath((Join-Path ([IO.Path]::GetTempPath()) ("mygame-sync-" + [guid]::NewGuid().ToString("N"))))
+$shellFile = Join-Path $launcherRoot "pwa/app-shell.js"
+
+$launcherShellFiles = @(
+  "index.html", "styles.css", "app.js", "manifest.webmanifest", "offline.html", "pwa/register.js",
+  "assets/icon.svg", "assets/icon-192.png", "assets/icon-512.png",
+  "assets/icon-maskable-192.png", "assets/icon-maskable-512.png", "assets/apple-touch-icon.png",
+  "assets/screenshots/playground-home.png", "assets/screenshots/playground-results.png"
+)
 
 function Assert-ChildPath([string]$Path, [string]$Parent, [string]$Label) {
   $full = [IO.Path]::GetFullPath($Path)
-  $prefix = [IO.Path]::GetFullPath($Parent).TrimEnd('\') + '\'
+  $sep = [IO.Path]::DirectorySeparatorChar
+  $prefix = [IO.Path]::GetFullPath($Parent).TrimEnd($sep) + $sep
   if (-not $full.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
     throw "$Label escaped its intended root: $full"
   }
   return $full
+}
+
+function Resolve-GameRepository($Entry) {
+  $names = @($Entry.local, $Entry.remote) | Where-Object { $_ } | Select-Object -Unique
+  foreach ($name in $names) {
+    $candidate = Join-Path $sourcesRoot $name
+    if (Test-Path -LiteralPath $candidate -PathType Container) { return $name }
+  }
+  throw "Missing game repository. Looked for $($names -join ', ') under $sourcesRoot"
 }
 
 function Copy-AllowlistedFile([string]$Repository, [string]$RelativePath, [string]$TargetName) {
@@ -27,7 +52,7 @@ function Copy-AllowlistedFile([string]$Repository, [string]$RelativePath, [strin
 }
 
 function Rewrite-VendoredHtml([string]$Path, [bool]$IsChapter) {
-  $html = Get-Content -Raw -LiteralPath $Path
+  $html = [IO.File]::ReadAllText($Path)
   $html = [regex]::Replace($html, '(?is)<script\b[^>]*\bdata-pwa-register\b[^>]*>\s*</script>', '')
   $html = [regex]::Replace($html, '(?is)<script\b[^>]*goatcounter[^>]*>\s*</script>', '')
   $html = [regex]::Replace($html, '(?is)<link\b[^>]*rel=["''](?:manifest|icon|apple-touch-icon)["''][^>]*>', '')
@@ -39,28 +64,39 @@ function Rewrite-VendoredHtml([string]$Path, [bool]$IsChapter) {
   <script src="/mygame/pwa/register.js" defer></script>
 '@
   $html = $html -replace '</head>', "$head</head>"
-  $home = if ($IsChapter) { '../../../' } else { '../../' }
-  $crumb = "<a href=`"$home`" class=`"playground-breadcrumb`" data-playground-breadcrumb>← Playground</a>"
+  $crumbHref = if ($IsChapter) { '../../../' } else { '../../' }
+  $crumb = "<a href=`"$crumbHref`" class=`"playground-breadcrumb`" data-playground-breadcrumb>← Playground</a>"
   $style = '<style>.playground-breadcrumb{position:relative;z-index:100;display:inline-flex;margin:.75rem 1rem 0;padding:.5rem .75rem;border-radius:999px;color:inherit;background:color-mix(in srgb,currentColor 9%,transparent);font:700 13px/1 system-ui;text-decoration:none}@media(display-mode:standalone){.playground-breadcrumb{margin-top:max(.75rem,env(safe-area-inset-top))}}</style>'
   $html = $html -replace '<body([^>]*)>', "<body`$1>$style$crumb"
-  Set-Content -LiteralPath $Path -Value $html -Encoding utf8NoBOM
+  [IO.File]::WriteAllText($Path, $html, $utf8)
 }
 
 function Get-TreeDigest([string]$Root) {
   if (-not (Test-Path -LiteralPath $Root)) { return @() }
-  return Get-ChildItem -LiteralPath $Root -Recurse -File | Sort-Object FullName | ForEach-Object {
+  return @(Get-ChildItem -LiteralPath $Root -Recurse -File | Sort-Object FullName | ForEach-Object {
     $relative = [IO.Path]::GetRelativePath($Root, $_.FullName).Replace('\', '/')
     "$relative $((Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash)"
+  })
+}
+
+function Get-CacheStamp([string[]]$DigestLines) {
+  $text = (@($DigestLines | Sort-Object) -join "`n")
+  $sha = [Security.Cryptography.SHA256]::Create()
+  try {
+    $hash = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))
+    return [BitConverter]::ToString($hash).Replace("-", "").Substring(0, 12).ToLowerInvariant()
+  } finally {
+    $sha.Dispose()
   }
 }
 
 $allowlists = [ordered]@{
-  "15puzzle" = @{ repository = "15puzzle"; files = @("index.html", "app.js", "styles.css") }
-  "2048" = @{ repository = "2048"; files = @("index.html", "app.js", "styles.css") }
-  "blockfall" = @{ repository = "Blockfall"; files = @("index.html", "script.js", "style.css") }
-  "minesweeper" = @{ repository = "Minesweeper"; files = @("index.html", "styles.css", "js/app.js", "js/game-state.js", "js/game-rules.js", "js/renderer.js") }
-  "sudoku" = @{ repository = "Sudoku"; files = @("index.html", "styles.css", "js/board.js", "js/exact.js", "js/logical.js", "js/difficulty.js", "js/generator.js", "js/game.js", "js/persistence.js", "js/view.js", "js/app.js") }
-  "matematyka" = @{ repository = "Matemetyka"; files = @(
+  "15puzzle" = @{ local = "15puzzle"; remote = "15puzzle"; files = @("index.html", "app.js", "styles.css") }
+  "2048" = @{ local = "2048"; remote = "2048"; files = @("index.html", "app.js", "styles.css") }
+  "blockfall" = @{ local = "Blockfall"; remote = "Blockfall"; files = @("index.html", "script.js", "style.css") }
+  "minesweeper" = @{ local = "Minesweeper"; remote = "Minesweeper"; files = @("index.html", "styles.css", "js/app.js", "js/game-state.js", "js/game-rules.js", "js/renderer.js") }
+  "sudoku" = @{ local = "Sudoku"; remote = "sudoku"; files = @("index.html", "styles.css", "js/board.js", "js/exact.js", "js/logical.js", "js/difficulty.js", "js/generator.js", "js/game.js", "js/persistence.js", "js/view.js", "js/app.js") }
+  "matematyka" = @{ local = "Matemetyka"; remote = "Matematyka"; files = @(
     "index.html", "shared/game-engine.js", "shared/game.css", "assets/math-town-mascot.png",
     "Chapter1/index.html", "Chapter1/game.js", "Chapter2/index.html", "Chapter2/game.js",
     "Chapter3/index.html", "Chapter3/game.js", "Chapter4/index.html", "Chapter4/game.js",
@@ -69,11 +105,16 @@ $allowlists = [ordered]@{
   ) }
 }
 
+if (-not (Test-Path -LiteralPath $sourcesRoot -PathType Container)) {
+  throw "Sources root not found: $sourcesRoot"
+}
+
 try {
   New-Item -ItemType Directory -Force -Path $stagingRoot | Out-Null
   foreach ($target in $allowlists.Keys) {
     $entry = $allowlists[$target]
-    foreach ($file in $entry.files) { Copy-AllowlistedFile $entry.repository $file $target }
+    $repository = Resolve-GameRepository $entry
+    foreach ($file in $entry.files) { Copy-AllowlistedFile $repository $file $target }
   }
 
   Get-ChildItem -LiteralPath $stagingRoot -Recurse -Filter index.html | ForEach-Object {
@@ -89,15 +130,18 @@ try {
 
   $htmlFiles = Get-ChildItem -LiteralPath $stagingRoot -Recurse -Filter index.html
   foreach ($htmlFile in $htmlFiles) {
-    $html = Get-Content -Raw -LiteralPath $htmlFile.FullName
+    $html = [IO.File]::ReadAllText($htmlFile.FullName)
     if (($html.Split('/mygame/pwa/register.js').Count - 1) -ne 1 -or $html -notmatch 'data-playground-breadcrumb' -or $html -notmatch '/mygame/manifest.webmanifest' -or $html -match 'data-pwa-register') {
       throw "Invalid vendored HTML contract: $($htmlFile.FullName)"
     }
   }
 
-  $appPaths = Get-ChildItem -LiteralPath $stagingRoot -Recurse -File | ForEach-Object {
+  $missingLauncher = @($launcherShellFiles | Where-Object { -not (Test-Path -LiteralPath (Join-Path $launcherRoot $_) -PathType Leaf) })
+  if ($missingLauncher) { throw "Missing launcher file required for app shell: $($missingLauncher -join ', ')" }
+
+  $appPaths = @(Get-ChildItem -LiteralPath $stagingRoot -Recurse -File | ForEach-Object {
     "apps/" + [IO.Path]::GetRelativePath($stagingRoot, $_.FullName).Replace('\', '/')
-  } | Sort-Object
+  } | Sort-Object)
   $shellPaths = @(
     "./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "offline.html", "pwa/register.js",
     "pwa/app-shell.js", "assets/icon.svg", "assets/icon-192.png", "assets/icon-512.png",
@@ -116,17 +160,20 @@ try {
     @("apps/blockfall/", "apps/blockfall/index.html"), @("apps/15puzzle/", "apps/15puzzle/index.html"),
     @("apps/sudoku/", "apps/sudoku/index.html"), @("apps/2048/", "apps/2048/index.html"), @("", "index.html")
   )
+  $stampLines = @($launcherShellFiles | ForEach-Object {
+    "$_ $((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $launcherRoot $_)).Hash)"
+  }) + @(Get-TreeDigest $stagingRoot | ForEach-Object { "apps/$_" })
+  $cacheVersion = Get-CacheStamp $stampLines
   $shellJson = $shellPaths | ConvertTo-Json -Compress
   $fallbackJson = $fallbacks | ForEach-Object { [ordered]@{ prefix = $_[0]; document = $_[1] } } | ConvertTo-Json -Compress
-  $generated = "self.PLAYGROUND_APP_SHELL = Object.freeze($shellJson);`nself.PLAYGROUND_NAVIGATE_FALLBACKS = Object.freeze($fallbackJson);`n"
+  $generated = "self.PLAYGROUND_CACHE_VERSION = `"$cacheVersion`";`nself.PLAYGROUND_APP_SHELL = Object.freeze($shellJson);`nself.PLAYGROUND_NAVIGATE_FALLBACKS = Object.freeze($fallbackJson);`n"
 
   if ($Check) {
     $current = Get-TreeDigest $appsRoot
     $staged = Get-TreeDigest $stagingRoot
-    if (Compare-Object $current $staged) { throw "Vendored apps differ. Run scripts/sync-apps.ps1 and commit the result." }
-    $shellFile = Join-Path $launcherRoot "pwa/app-shell.js"
-    if (-not (Test-Path -LiteralPath $shellFile) -or (Get-Content -Raw -LiteralPath $shellFile) -cne $generated) { throw "pwa/app-shell.js is out of date." }
-    Write-Host "Vendored apps and app shell are current."
+    if (Compare-Object $current $staged) { throw "Generated apps/ differs from a fresh assemble. Run scripts/sync-apps.ps1 and do not commit apps/ or pwa/app-shell.js." }
+    if (-not (Test-Path -LiteralPath $shellFile) -or [IO.File]::ReadAllText($shellFile) -cne $generated) { throw "pwa/app-shell.js is out of date. Run scripts/sync-apps.ps1 and do not commit it." }
+    Write-Host "Generated apps and app shell are current (cache $cacheVersion)."
     return
   }
 
@@ -135,8 +182,8 @@ try {
   Move-Item -LiteralPath $stagingRoot -Destination $appsRoot
   $pwaDirectory = Join-Path $launcherRoot "pwa"
   New-Item -ItemType Directory -Force -Path $pwaDirectory | Out-Null
-  Set-Content -LiteralPath (Join-Path $pwaDirectory "app-shell.js") -Value $generated -Encoding utf8NoBOM
-  Write-Host "Synchronized $($appPaths.Count) runtime files into apps/."
+  [IO.File]::WriteAllText($shellFile, $generated, $utf8)
+  Write-Host "Synchronized $($appPaths.Count) runtime files into apps/ (cache $cacheVersion)."
 } finally {
   if (Test-Path -LiteralPath $stagingRoot) { Remove-Item -LiteralPath $stagingRoot -Recurse -Force }
 }

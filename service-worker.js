@@ -1,7 +1,7 @@
 importScripts("./pwa/app-shell.js");
 
 const CACHE_PREFIX = "playground-shell-";
-const CACHE_VERSION = 1;
+const CACHE_VERSION = self.PLAYGROUND_CACHE_VERSION;
 const CACHE_NAME = `${CACHE_PREFIX}v${CACHE_VERSION}`;
 const LEGACY_CACHE_NAME = "playground-game-launcher-shell";
 const NETWORK_TIMEOUT_MS = 1800;
