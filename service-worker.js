@@ -67,6 +67,24 @@ async function networkFirst(request) {
   return navigationFallback(request);
 }
 
+async function networkFirstAsset(request) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS);
+  try {
+    const response = await fetch(request, { cache: "no-store", signal: controller.signal });
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+      return response;
+    }
+    if (response.status < 500) return response;
+  } catch { /* Offline, timeout, and server errors use the matching cached asset. */ }
+  finally { clearTimeout(timeout); }
+
+  const cache = await caches.open(CACHE_NAME);
+  return (await cache.match(request, { ignoreSearch: true })) || Response.error();
+}
+
 async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request, { ignoreSearch: true });
@@ -79,5 +97,12 @@ self.addEventListener("fetch", event => {
   const { request } = event;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== ROOT.origin || !url.pathname.startsWith(ROOT.pathname)) return;
-  event.respondWith(request.mode === "navigate" ? networkFirst(request) : staleWhileRevalidate(request, event));
+  const requiresFreshAppCode = request.destination === "style" || request.destination === "script";
+  event.respondWith(
+    request.mode === "navigate"
+      ? networkFirst(request)
+      : requiresFreshAppCode
+        ? networkFirstAsset(request)
+        : staleWhileRevalidate(request, event)
+  );
 });

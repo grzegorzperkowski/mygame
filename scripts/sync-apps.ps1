@@ -16,7 +16,7 @@ $stagingRoot = [IO.Path]::GetFullPath((Join-Path ([IO.Path]::GetTempPath()) ("my
 $shellFile = Join-Path $launcherRoot "pwa/app-shell.js"
 
 $launcherShellFiles = @(
-  "index.html", "styles.css", "app.js", "manifest.webmanifest", "offline.html", "pwa/register.js",
+  "index.html", "styles.css", "app.js", "manifest.webmanifest", "offline.html", "service-worker.js", "pwa/register.js",
   "assets/icon.svg", "assets/icon-192.png", "assets/icon-512.png",
   "assets/icon-maskable-192.png", "assets/icon-maskable-512.png", "assets/apple-touch-icon.png",
   "assets/screenshots/playground-home.png", "assets/screenshots/sudoku.png",
