@@ -19,42 +19,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Playground
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: site
 
       - name: Checkout 15puzzle
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/15puzzle
           path: sources/15puzzle
 
       - name: Checkout 2048
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/2048
           path: sources/2048
 
       - name: Checkout Blockfall
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/Blockfall
           path: sources/Blockfall
 
       - name: Checkout Minesweeper
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/Minesweeper
           path: sources/Minesweeper
 
       - name: Checkout sudoku
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/sudoku
           path: sources/sudoku
 
       - name: Checkout Matematyka
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/Matematyka
           path: sources/Matematyka
@@ -68,7 +68,7 @@ jobs:
         run: pwsh -File scripts/sync-apps.ps1 -SourcesRoot "${{ github.workspace }}/sources" -Check
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
