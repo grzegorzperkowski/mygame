@@ -13,6 +13,15 @@
   let installPrompt = null;
   let waitingWorker = null;
   let reloadForUpdate = false;
+  let reloading = false;
+  let controllerTried = false;
+  let reloadTimer = 0;
+  function reloadOnce() {
+    if (!reloadForUpdate || reloading) return;
+    reloading = true;
+    window.clearTimeout(reloadTimer);
+    window.location.reload();
+  }
 
   function isStandalone() {
     return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -31,15 +40,23 @@
     }
   }
 
-  function acceptUpdate() {
-    if (!waitingWorker) return;
+  function acceptUpdate(event) {
+    if (!waitingWorker || reloadForUpdate) return;
     reloadForUpdate = true;
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
     if (updateButton) updateButton.disabled = true;
+    if (event?.currentTarget && "disabled" in event.currentTarget) event.currentTarget.disabled = true;
+    window.clearTimeout(reloadTimer);
+    reloadTimer = window.setTimeout(reloadOnce, 1000);
   }
 
   updateButton?.addEventListener("click", acceptUpdate);
-  navigator.serviceWorker.addEventListener("controllerchange", () => { if (reloadForUpdate) window.location.reload(); });
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!reloadForUpdate || reloading || controllerTried) return;
+    controllerTried = true;
+    window.addEventListener("pagehide", () => { reloading = true; window.clearTimeout(reloadTimer); }, { once: true });
+    window.location.reload();
+  });
   navigator.serviceWorker.addEventListener("message", event => {
     if (event.data?.type === "PLAYGROUND_SHELL_READY" && offlineStatus) offlineStatus.textContent = "All games ready offline";
   });
