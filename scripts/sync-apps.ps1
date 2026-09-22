@@ -100,7 +100,7 @@ $allowlists = [ordered]@{
   "minesweeper" = @{ local = "Minesweeper"; remote = "Minesweeper"; files = @("index.html", "styles.css", "js/app.js", "js/game-state.js", "js/game-rules.js", "js/renderer.js") }
   "sudoku" = @{ local = "Sudoku"; remote = "sudoku"; files = @("index.html", "styles.css", "js/board.js", "js/exact.js", "js/logical.js", "js/difficulty.js", "js/generator.js", "js/game.js", "js/persistence.js", "js/view.js", "js/app.js") }
   "matematyka" = @{ local = "Matemetyka"; remote = "Matematyka"; files = @(
-    "index.html", "shared/game-engine.js", "shared/game.css", "assets/math-town-mascot.png",
+    "index.html", "postepy.html", "shared/game-engine.js", "shared/game.css", "shared/chapter-catalog.js", "shared/progress-page.js", "assets/math-town-mascot.png",
     "Chapter1/index.html", "Chapter1/game.js", "Chapter2/index.html", "Chapter2/game.js",
     "Chapter3/index.html", "Chapter3/game.js", "Chapter4/index.html", "Chapter4/game.js",
     "Chapter5/index.html", "Chapter5/game.js", "Chapter6/index.html", "Chapter6/game.js",
@@ -120,7 +120,7 @@ try {
     foreach ($file in $entry.files) { Copy-AllowlistedFile $repository $file $target }
   }
 
-  Get-ChildItem -LiteralPath $stagingRoot -Recurse -Filter index.html | ForEach-Object {
+  Get-ChildItem -LiteralPath $stagingRoot -Recurse -File | Where-Object { $_.Name -in @("index.html", "postepy.html") } | ForEach-Object {
     $relative = [IO.Path]::GetRelativePath($stagingRoot, $_.FullName).Replace('\', '/')
     Rewrite-VendoredHtml $_.FullName ($relative -match '^matematyka/Chapter[1-8]/index\.html$')
   }
@@ -131,7 +131,7 @@ try {
   }
   if ($forbidden) { throw "Forbidden vendored files: $($forbidden.FullName -join ', ')" }
 
-  $htmlFiles = Get-ChildItem -LiteralPath $stagingRoot -Recurse -Filter index.html
+  $htmlFiles = Get-ChildItem -LiteralPath $stagingRoot -Recurse -File | Where-Object { $_.Name -in @("index.html", "postepy.html") }
   foreach ($htmlFile in $htmlFiles) {
     $html = [IO.File]::ReadAllText($htmlFile.FullName)
     if (($html.Split('/mygame/pwa/register.js').Count - 1) -ne 1 -or $html -notmatch 'data-playground-breadcrumb' -or $html -notmatch '/mygame/manifest.webmanifest' -or $html -match 'data-pwa-register') {
