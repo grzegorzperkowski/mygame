@@ -62,8 +62,11 @@
   });
 
   window.addEventListener("beforeinstallprompt", event => {
-    event.preventDefault(); installPrompt = event;
-    if (installButton && !isStandalone()) installButton.hidden = false;
+    // Vendored game pages have no install button, so let the browser show its own UI.
+    if (!installButton || isStandalone()) return;
+    event.preventDefault();
+    installPrompt = event;
+    installButton.hidden = false;
   });
   window.addEventListener("appinstalled", () => {
     installPrompt = null;
