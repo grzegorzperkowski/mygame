@@ -31,21 +31,23 @@ Push `mygame`. The same workflow assembles the current allowlisted game sources 
 
 ## Local nested preview
 
-From this directory, with the six game clones as siblings under `C:\Sources` (`Sudoku`, `Matemetyka`, …):
+From this directory, with the six game clones as siblings under `C:\Sources` (`Sudoku`, `Matemetyka`, …) and Python 3 installed:
 
 ```powershell
-pwsh -File .\scripts\sync-apps.ps1
+pwsh -File .\scripts\preview.ps1
 ```
 
-Serve `C:\Sources` so the path is `/mygame/`. Do not commit `apps/` or `pwa/app-shell.js`.
+Open **http://127.0.0.1:8765/mygame/**, then follow the game links or open **http://127.0.0.1:8765/mygame/apps/minesweeper/** directly. Press Ctrl+C to stop the server. The preview builds a stamped copy under `.preview/mygame/`, using the same `/mygame/` URL path as GitHub Pages. To inspect the stamped HTML through `file://`, run `pwsh -File .\scripts\preview.ps1 -BuildOnly` and open `file:///C:/Sources/mygame/.preview/mygame/index.html`. File navigation works there, but offline installation and service workers require the HTTP preview. Do not commit `apps/`, `pwa/app-shell.js`, or `.preview/`.
 
 ```powershell
 pwsh -File .\scripts\sync-apps.ps1 -Check
 ```
 
-Run `-Check` after the normal sync command. It compares the current generated tree to a fresh assemble; it is not a replacement for creating the local tree first.
+The preview command runs assembly and this check automatically. You can also run `-Check` after `sync-apps.ps1` to compare the current generated tree to a fresh assemble.
 
 The generated cache version is derived from the launcher assets and assembled game tree, so a changed game gets a new service-worker cache on the next deployment.
+
+Each deployed HTML page also shows a small build label at the bottom: Warsaw assembly time (CET or CEST) plus the 12-character content hash. This includes the launcher, game pages, and Matematyka subpages. The label is embedded in the HTML, so an offline or cached page shows the version of the page that actually loaded. The workflow stamps pages after the assembly check and before upload. The preview command stamps its copy in the same way.
 
 ## PWA assets
 

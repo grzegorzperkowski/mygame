@@ -59,15 +59,16 @@ function Rewrite-VendoredHtml([string]$Path, [bool]$IsChapter) {
   $html = [regex]::Replace($html, '(?is)<script\b[^>]*\bdata-pwa-register\b[^>]*>\s*</script>', '')
   $html = [regex]::Replace($html, '(?is)<script\b[^>]*goatcounter[^>]*>\s*</script>', '')
   $html = [regex]::Replace($html, '(?is)<link\b[^>]*rel=["''](?:manifest|icon|apple-touch-icon)["''][^>]*>', '')
-  $head = @'
+  $rootRelative = if ($IsChapter) { '../../../' } else { '../../' }
+  $head = @"
   <meta name="playground-root" content="/mygame/">
-  <link rel="manifest" href="/mygame/manifest.webmanifest">
-  <link rel="icon" href="/mygame/assets/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/mygame/assets/apple-touch-icon.png">
-  <script src="/mygame/pwa/register.js" defer></script>
-'@
+  <link rel="manifest" href="${rootRelative}manifest.webmanifest">
+  <link rel="icon" href="${rootRelative}assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="${rootRelative}assets/apple-touch-icon.png">
+  <script src="${rootRelative}pwa/register.js" defer></script>
+"@
   $html = $html -replace '</head>', "$head</head>"
-  $crumbHref = if ($IsChapter) { '../../../' } else { '../../' }
+  $crumbHref = "${rootRelative}index.html"
   $crumb = "<a href=`"$crumbHref`" class=`"playground-breadcrumb`" data-playground-breadcrumb>← Playground</a>"
   $style = '<style>.playground-breadcrumb{position:relative;z-index:100;display:inline-flex;margin:.75rem 1rem 0;padding:.5rem .75rem;border-radius:999px;color:inherit;background:color-mix(in srgb,currentColor 9%,transparent);font:700 13px/1 system-ui;text-decoration:none}@media(display-mode:standalone){.playground-breadcrumb{margin-top:max(.75rem,env(safe-area-inset-top))}}</style>'
   $html = $html -replace '<body([^>]*)>', "<body`$1>$style$crumb"
@@ -134,7 +135,7 @@ try {
   $htmlFiles = Get-ChildItem -LiteralPath $stagingRoot -Recurse -File | Where-Object { $_.Name -in @("index.html", "postepy.html") }
   foreach ($htmlFile in $htmlFiles) {
     $html = [IO.File]::ReadAllText($htmlFile.FullName)
-    if (($html.Split('/mygame/pwa/register.js').Count - 1) -ne 1 -or $html -notmatch 'data-playground-breadcrumb' -or $html -notmatch '/mygame/manifest.webmanifest' -or $html -match 'data-pwa-register') {
+    if (($html.Split('pwa/register.js').Count - 1) -ne 1 -or $html -notmatch 'data-playground-breadcrumb' -or $html -notmatch 'manifest.webmanifest' -or $html -match 'data-pwa-register') {
       throw "Invalid vendored HTML contract: $($htmlFile.FullName)"
     }
   }

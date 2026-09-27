@@ -67,6 +67,10 @@ jobs:
         working-directory: site
         run: pwsh -File scripts/sync-apps.ps1 -SourcesRoot "${{ github.workspace }}/sources" -Check
 
+      - name: Stamp page versions
+        working-directory: site
+        run: pwsh -File scripts/stamp-pages.ps1
+
       - name: Setup Pages
         uses: actions/configure-pages@v6
 

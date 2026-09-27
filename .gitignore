@@ -1,3 +1,4 @@
 # Nested runtimes and the shell list are assembled locally or in CI.
 /apps/
 /pwa/app-shell.js
+/.preview/

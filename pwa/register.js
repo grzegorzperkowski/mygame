@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
+  if (location.protocol === "file:" || !("serviceWorker" in navigator) || !window.isSecureContext) return;
   if (window.__playgroundPwaRegistrationStarted) return;
   window.__playgroundPwaRegistrationStarted = true;
 
