@@ -1,8 +1,8 @@
 # Playground
 
-Launcher PWA for six games at https://grzegorzperkowski.github.io/mygame/.
+Launcher PWA for games at https://grzegorzperkowski.github.io/mygame/.
 
-Nested URLs stay `/mygame/apps/<id>/`. The games themselves live in their own public repos. This repo keeps the launcher only; GitHub Actions copies the allowlist, rewrites nested HTML, and deploys Pages.
+Nested URLs stay `/mygame/apps/<id>/`. The games themselves live in their own public repos. This repo keeps the launcher; GitHub Actions copies the allowlist, rewrites nested HTML, and deploys Pages. Standalone games (such as Solitaire) link to their independent deployment.
 
 ## PWA behavior
 
@@ -59,4 +59,4 @@ Each deployed HTML page also shows a small build label at the bottom: Warsaw ass
 
 Settings → Pages → Source must be **GitHub Actions**. Branch deploy from `master` `/` will not run this workflow.
 
-Standalone `/2048/`, `/sudoku/`, and the other game URLs still deploy from their own repos.
+Standalone `/2048/`, `/sudoku/`, `/Solitaire/`, and the other game URLs still deploy from their own repos.

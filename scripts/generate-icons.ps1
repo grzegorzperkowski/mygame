@@ -10,7 +10,8 @@ $items = @(
   @{ Repository = "Blockfall"; Directory = "assets/icons"; Label = "B"; Background = "#101416"; Accent = "#9ee46a" },
   @{ Repository = "Minesweeper"; Directory = "assets/icons"; Label = "M"; Background = "#111a26"; Accent = "#fa6f88" },
   @{ Repository = "Sudoku"; Directory = "assets/icons"; Label = "S"; Background = "#f7f5ef"; Accent = "#7664d8" },
-  @{ Repository = "Matemetyka"; Directory = "assets/icons"; Label = "+"; Background = "#fffaf2"; Accent = "#f47721" }
+  @{ Repository = "Matemetyka"; Directory = "assets/icons"; Label = "+"; Background = "#fffaf2"; Accent = "#f47721" },
+  @{ Repository = "Solitaire"; Directory = "assets/icons"; Label = "♠"; Background = "#123e32"; Accent = "#34d399" }
 )
 
 function New-Icon([string]$Path, [int]$Size, [string]$Label, [string]$Background, [string]$Accent, [bool]$Maskable) {

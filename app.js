@@ -1,5 +1,5 @@
 const statusLabel = document.querySelector(".connection-label");
-const RESULT_APPS = ["15puzzle", "2048", "blockfall", "minesweeper", "sudoku", "matematyka"];
+const RESULT_APPS = ["15puzzle", "2048", "blockfall", "minesweeper", "sudoku", "matematyka", "solitaire"];
 
 function updateConnectionStatus() {
   const online = navigator.onLine;
