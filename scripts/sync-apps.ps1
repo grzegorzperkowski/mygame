@@ -73,6 +73,7 @@ function Rewrite-VendoredHtml([string]$Path, [bool]$IsChapter, [bool]$IsSolitair
   $crumbHref = "${rootRelative}index.html"
   $crumb = "<a href=`"$crumbHref`" class=`"playground-breadcrumb`" data-playground-breadcrumb>← Playground</a>"
   $style = '<style>.playground-breadcrumb{position:relative;z-index:100;display:inline-flex;margin:.75rem 1rem 0;padding:.5rem .75rem;border-radius:999px;color:inherit;background:color-mix(in srgb,currentColor 9%,transparent);font:700 13px/1 system-ui;text-decoration:none}@media(display-mode:standalone){.playground-breadcrumb{margin-top:max(.75rem,env(safe-area-inset-top))}}</style>'
+  if ($IsSolitaire) { $style = $style.Replace('.playground-breadcrumb{', '.playground-breadcrumb{align-self:flex-start;margin-bottom:12px;') }
   $html = $html -replace '<body([^>]*)>', "<body`$1>$style$crumb"
   [IO.File]::WriteAllText($Path, $html, $utf8)
 }
