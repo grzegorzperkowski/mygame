@@ -22,7 +22,7 @@ $launcherShellFiles = @(
   "assets/screenshots/playground-home.png", "assets/screenshots/sudoku.png",
   "assets/screenshots/minesweeper.png", "assets/screenshots/matematyka.png",
   "assets/screenshots/blockfall.png", "assets/screenshots/2048.png",
-  "assets/screenshots/15puzzle.png"
+  "assets/screenshots/15puzzle.png", "assets/screenshots/solitaire.png"
 )
 
 function Assert-ChildPath([string]$Path, [string]$Parent, [string]$Label) {
@@ -44,17 +44,18 @@ function Resolve-GameRepository($Entry) {
   throw "Missing game repository. Looked for $($names -join ', ') under $sourcesRoot"
 }
 
-function Copy-AllowlistedFile([string]$Repository, [string]$RelativePath, [string]$TargetName) {
+function Copy-AllowlistedFile([string]$Repository, [string]$RelativePath, [string]$TargetName, [string]$TargetRelativePath) {
+  if ([string]::IsNullOrWhiteSpace($TargetRelativePath)) { $TargetRelativePath = $RelativePath }
   $repositoryRoot = Assert-ChildPath (Join-Path $sourcesRoot $Repository) $sourcesRoot "Repository"
   $source = Assert-ChildPath (Join-Path $repositoryRoot $RelativePath) $repositoryRoot "Source"
   if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "Missing allowlisted source: $source" }
-  $destination = Assert-ChildPath (Join-Path $stagingRoot (Join-Path $TargetName $RelativePath)) $stagingRoot "Staging destination"
+  $destination = Assert-ChildPath (Join-Path $stagingRoot (Join-Path $TargetName $TargetRelativePath)) $stagingRoot "Staging destination"
   $parent = Split-Path -Parent $destination
   New-Item -ItemType Directory -Force -Path $parent | Out-Null
   Copy-Item -LiteralPath $source -Destination $destination
 }
 
-function Rewrite-VendoredHtml([string]$Path, [bool]$IsChapter) {
+function Rewrite-VendoredHtml([string]$Path, [bool]$IsChapter, [bool]$IsSolitaire) {
   $html = [IO.File]::ReadAllText($Path)
   $html = [regex]::Replace($html, '(?is)<script\b[^>]*\bdata-pwa-register\b[^>]*>\s*</script>', '')
   $html = [regex]::Replace($html, '(?is)<script\b[^>]*goatcounter[^>]*>\s*</script>', '')
@@ -67,6 +68,7 @@ function Rewrite-VendoredHtml([string]$Path, [bool]$IsChapter) {
   <link rel="apple-touch-icon" href="${rootRelative}assets/apple-touch-icon.png">
   <script src="${rootRelative}pwa/register.js" defer></script>
 "@
+  if ($IsSolitaire) { $head += "  <style>#build-stamp{display:none}</style>`n" }
   $html = $html -replace '</head>', "$head</head>"
   $crumbHref = "${rootRelative}index.html"
   $crumb = "<a href=`"$crumbHref`" class=`"playground-breadcrumb`" data-playground-breadcrumb>← Playground</a>"
@@ -100,6 +102,7 @@ $allowlists = [ordered]@{
   "blockfall" = @{ local = "Blockfall"; remote = "Blockfall"; files = @("index.html", "script.js", "style.css") }
   "minesweeper" = @{ local = "Minesweeper"; remote = "Minesweeper"; files = @("index.html", "styles.css", "js/app.js", "js/game-state.js", "js/game-rules.js", "js/renderer.js") }
   "sudoku" = @{ local = "Sudoku"; remote = "sudoku"; files = @("index.html", "styles.css", "js/board.js", "js/exact.js", "js/logical.js", "js/difficulty.js", "js/generator.js", "js/game.js", "js/persistence.js", "js/view.js", "js/app.js") }
+  "solitaire" = @{ local = "Solitaire"; remote = "Solitaire"; buildOutput = "dist" }
   "matematyka" = @{ local = "Matemetyka"; remote = "Matematyka"; files = @(
     "index.html", "postepy.html", "shared/game-engine.js", "shared/game.css", "shared/chapter-catalog.js", "shared/progress-page.js", "assets/math-town-mascot.png",
     "Chapter1/index.html", "Chapter1/game.js", "Chapter2/index.html", "Chapter2/game.js",
@@ -118,12 +121,33 @@ try {
   foreach ($target in $allowlists.Keys) {
     $entry = $allowlists[$target]
     $repository = Resolve-GameRepository $entry
-    foreach ($file in $entry.files) { Copy-AllowlistedFile $repository $file $target }
+    if ($entry.buildOutput) {
+      $repositoryRoot = Assert-ChildPath (Join-Path $sourcesRoot $repository) $sourcesRoot "Repository"
+      $previousPlaygroundBuild = $env:PLAYGROUND_BUILD
+      try {
+        $env:PLAYGROUND_BUILD = "true"
+        & npm --prefix $repositoryRoot run build
+      } finally {
+        if ($null -eq $previousPlaygroundBuild) { Remove-Item Env:PLAYGROUND_BUILD -ErrorAction SilentlyContinue }
+        else { $env:PLAYGROUND_BUILD = $previousPlaygroundBuild }
+      }
+      if ($LASTEXITCODE -ne 0) { throw "Build failed for $repository" }
+      $outputRoot = Assert-ChildPath (Join-Path $repositoryRoot $entry.buildOutput) $repositoryRoot "Build output"
+      if (-not (Test-Path -LiteralPath (Join-Path $outputRoot "index.html") -PathType Leaf)) { throw "Missing build output: $outputRoot/index.html" }
+      Get-ChildItem -LiteralPath $outputRoot -Recurse -File | ForEach-Object {
+        $sourceRelative = [IO.Path]::GetRelativePath($repositoryRoot, $_.FullName).Replace('\', '/')
+        $targetRelative = [IO.Path]::GetRelativePath($outputRoot, $_.FullName).Replace('\', '/')
+        Copy-AllowlistedFile $repository $sourceRelative $target $targetRelative
+      }
+      if (-not (Test-Path -LiteralPath (Join-Path $stagingRoot "$target/index.html") -PathType Leaf)) { throw "Build output was not copied to the app root: $target" }
+    } else {
+      foreach ($file in $entry.files) { Copy-AllowlistedFile $repository $file $target }
+    }
   }
 
   Get-ChildItem -LiteralPath $stagingRoot -Recurse -File | Where-Object { $_.Name -in @("index.html", "postepy.html") } | ForEach-Object {
     $relative = [IO.Path]::GetRelativePath($stagingRoot, $_.FullName).Replace('\', '/')
-    Rewrite-VendoredHtml $_.FullName ($relative -match '^matematyka/Chapter[1-8]/index\.html$')
+    Rewrite-VendoredHtml $_.FullName ($relative -match '^matematyka/Chapter[1-8]/index\.html$') ($relative -eq 'solitaire/index.html')
   }
 
   $forbidden = Get-ChildItem -LiteralPath $stagingRoot -Recurse -File | Where-Object {
@@ -153,7 +177,7 @@ try {
     "assets/screenshots/playground-home.png", "assets/screenshots/sudoku.png",
     "assets/screenshots/minesweeper.png", "assets/screenshots/matematyka.png",
     "assets/screenshots/blockfall.png", "assets/screenshots/2048.png",
-    "assets/screenshots/15puzzle.png"
+    "assets/screenshots/15puzzle.png", "assets/screenshots/solitaire.png"
   ) + $appPaths
   $fallbacks = @(
     @("apps/matematyka/Chapter1/", "apps/matematyka/Chapter1/index.html"),
@@ -165,6 +189,7 @@ try {
     @("apps/matematyka/Chapter7/", "apps/matematyka/Chapter7/index.html"),
     @("apps/matematyka/Chapter8/", "apps/matematyka/Chapter8/index.html"),
     @("apps/matematyka/", "apps/matematyka/index.html"), @("apps/minesweeper/", "apps/minesweeper/index.html"),
+    @("apps/solitaire/", "apps/solitaire/index.html"),
     @("apps/blockfall/", "apps/blockfall/index.html"), @("apps/15puzzle/", "apps/15puzzle/index.html"),
     @("apps/sudoku/", "apps/sudoku/index.html"), @("apps/2048/", "apps/2048/index.html"), @("", "index.html")
   )

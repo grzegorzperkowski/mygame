@@ -6,7 +6,7 @@ Nested URLs stay `/mygame/apps/<id>/`. The games themselves live in their own pu
 
 ## PWA behavior
 
-- One installation covers the launcher and all six nested games under `/mygame/`.
+- One installation covers the launcher and all seven nested games under `/mygame/`.
 - The first successful online load prepares the complete app shell for offline use. The status changes to **All games ready offline** when caching finishes.
 - Playground requests persistent browser storage when the user installs the app or first presses a game card; there is no separate persistence button.
 - A waiting service worker shows an update banner. Use **Reload** to activate it without forcing a reload in the middle of a game.
@@ -14,7 +14,7 @@ Nested URLs stay `/mygame/apps/<id>/`. The games themselves live in their own pu
 
 ## Update a game
 
-1. Push the game repo (that updates the standalone site, e.g. `/2048/`).
+1. Push the game repo (that updates its standalone site, e.g. `/2048/`).
 2. Rebuild Playground:
 
 ```bash
@@ -31,13 +31,13 @@ Push `mygame`. The same workflow assembles the current allowlisted game sources 
 
 ## Local nested preview
 
-From this directory, with the six game clones as siblings under `C:\Sources` (`Sudoku`, `Matemetyka`, …) and Python 3 installed:
+From this directory, with the game clones as siblings under `C:\Sources` (`Solitaire`, `Sudoku`, `Matemetyka`, …), Solitaire dependencies installed with `npm ci`, and Python 3 installed:
 
 ```powershell
 pwsh -File .\scripts\preview.ps1
 ```
 
-Open **http://127.0.0.1:8765/mygame/**, then follow the game links or open **http://127.0.0.1:8765/mygame/apps/minesweeper/** directly. Press Ctrl+C to stop the server. The preview builds a stamped copy under `.preview/mygame/`, using the same `/mygame/` URL path as GitHub Pages. To inspect the stamped HTML through `file://`, run `pwsh -File .\scripts\preview.ps1 -BuildOnly` and open `file:///C:/Sources/mygame/.preview/mygame/index.html`. File navigation works there, but offline installation and service workers require the HTTP preview. Do not commit `apps/`, `pwa/app-shell.js`, or `.preview/`.
+Open **http://127.0.0.1:8765/mygame/**, then follow the game links or open **http://127.0.0.1:8765/mygame/apps/solitaire/** directly. Press Ctrl+C to stop the server. The preview builds a stamped copy under `.preview/mygame/`, using the same `/mygame/` URL path as GitHub Pages. To inspect the stamped HTML through `file://`, run `pwsh -File .\scripts/preview.ps1 -BuildOnly` and open `file:///C:/Sources/mygame/.preview/mygame/index.html`. File navigation works there, but offline installation and service workers require the HTTP preview. Do not commit `apps/`, `pwa/app-shell.js`, or `.preview/`.
 
 ```powershell
 pwsh -File .\scripts\sync-apps.ps1 -Check
@@ -52,7 +52,7 @@ Each deployed HTML page also shows a small build label at the bottom: Warsaw ass
 ## PWA assets
 
 - Edit `assets/icon.svg` and regenerate the checked-in Playground PNGs when changing the launcher icon. `scripts/generate-icons.ps1` generates icon sets for the six standalone game repositories only.
-- Keep all seven `540x960` images in `assets/screenshots/` synchronized with the manifest: `playground-home.png` and one image per game.
+- Keep all eight `540x960` images in `assets/screenshots/` synchronized with the manifest: `playground-home.png` and one image per game.
 - Changes to a launcher asset listed by `scripts/sync-apps.ps1` are included in the generated app shell during deployment.
 
 ## Pages source

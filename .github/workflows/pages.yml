@@ -59,6 +59,23 @@ jobs:
           repository: ${{ github.repository_owner }}/Matematyka
           path: sources/Matematyka
 
+      - name: Checkout Solitaire
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository_owner }}/Solitaire
+          path: sources/Solitaire
+
+      - name: Set up Node.js for Solitaire
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: sources/Solitaire/package-lock.json
+
+      - name: Install Solitaire dependencies
+        working-directory: sources/Solitaire
+        run: npm ci
+
       - name: Assemble nested apps
         working-directory: site
         run: pwsh -File scripts/sync-apps.ps1 -SourcesRoot "${{ github.workspace }}/sources"

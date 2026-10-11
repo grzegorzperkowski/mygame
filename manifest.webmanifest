@@ -21,7 +21,8 @@
     { "name": "Blockfall", "url": "./apps/blockfall/" },
     { "name": "Minesweeper", "url": "./apps/minesweeper/" },
     { "name": "Sudoku", "url": "./apps/sudoku/" },
-    { "name": "Matematyka", "url": "./apps/matematyka/" }
+    { "name": "Matematyka", "url": "./apps/matematyka/" },
+    { "name": "Solitaire", "url": "./apps/solitaire/" }
   ],
   "screenshots": [
     { "src": "assets/screenshots/playground-home.png", "sizes": "540x960", "type": "image/png", "form_factor": "narrow", "label": "Playground game shelf" },
@@ -30,7 +31,8 @@
     { "src": "assets/screenshots/matematyka.png", "sizes": "540x960", "type": "image/png", "form_factor": "narrow", "label": "Matematyka" },
     { "src": "assets/screenshots/blockfall.png", "sizes": "540x960", "type": "image/png", "form_factor": "narrow", "label": "Blockfall" },
     { "src": "assets/screenshots/2048.png", "sizes": "540x960", "type": "image/png", "form_factor": "narrow", "label": "2048" },
-    { "src": "assets/screenshots/15puzzle.png", "sizes": "540x960", "type": "image/png", "form_factor": "narrow", "label": "15 Puzzle" }
+    { "src": "assets/screenshots/15puzzle.png", "sizes": "540x960", "type": "image/png", "form_factor": "narrow", "label": "15 Puzzle" },
+    { "src": "assets/screenshots/solitaire.png", "sizes": "540x960", "type": "image/png", "form_factor": "narrow", "label": "Solitaire" }
   ]
 }
 
