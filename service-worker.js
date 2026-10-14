@@ -34,6 +34,7 @@ self.addEventListener("activate", event => event.waitUntil(Promise.all([
   self.clients.claim()
 ])));
 self.addEventListener("message", event => {
+  if (event.data?.type === "GET_VERSION") event.source?.postMessage({ type: "PLAYGROUND_VERSION", version: CACHE_VERSION });
   if (event.data?.type === "SKIP_WAITING") event.waitUntil(self.skipWaiting());
   if (event.data?.type === "CHECK_SHELL_READY") event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);

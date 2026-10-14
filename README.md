@@ -9,7 +9,8 @@ Nested URLs stay `/mygame/apps/<id>/`. The games themselves live in their own pu
 - One installation covers the launcher and all seven nested games under `/mygame/`.
 - The first successful online load prepares the complete app shell for offline use. The status changes to **All games ready offline** when caching finishes.
 - Playground requests persistent browser storage when the user installs the app or first presses a game card; there is no separate persistence button.
-- A waiting service worker shows an update banner. Use **Reload** to activate it without forcing a reload in the middle of a game.
+- Updates are checked on load, when the app returns to the foreground (including resuming the Android PWA), and when a visible page is restored from the browser's back-forward cache. Offline checks fail silently and retry on the next return.
+- If a waiting service worker matches the loaded page's build, it activates silently without another reload. Otherwise an update banner offers **Reload**, so an older page is not interrupted in the middle of a game. Missing build metadata or an unanswered version request keeps the manual update flow.
 - The Android install sheet uses the launcher screenshot plus one screenshot for every game. Launcher artwork is based on `assets/icon.svg` and uses the gamepad mark.
 
 ## Update a game
@@ -24,6 +25,8 @@ gh workflow run pages.yml
 Or Actions → **Deploy Playground to GitHub Pages** → **Run workflow**.
 
 Installed app: reload when the update banner appears. Pushing a game repo does not change `/mygame/apps/...` until this workflow runs.
+
+Run the PWA update checks locally with `node --test` (Node.js 22 or later and PowerShell 7).
 
 ## Update the shelf
 

@@ -10,12 +10,14 @@
   const offlineStatus = document.querySelector("#offline-status");
   const updatePanel = document.querySelector("#update-panel");
   const updateButton = document.querySelector("#update-button");
+  const pageVersion = document.querySelector("[data-playground-build]")?.dataset.playgroundBuild;
   let installPrompt = null;
   let waitingWorker = null;
   let reloadForUpdate = false;
   let reloading = false;
   let controllerTried = false;
   let reloadTimer = 0;
+  let versionTimer = 0;
   function reloadOnce() {
     if (!reloadForUpdate || reloading) return;
     reloading = true;
@@ -40,9 +42,19 @@
     }
   }
 
+  function checkUpdate(worker) {
+    waitingWorker = worker;
+    window.clearTimeout(versionTimer);
+    if (!pageVersion) { showUpdate(worker); return; }
+    versionTimer = window.setTimeout(() => showUpdate(worker), 2000);
+    try { worker.postMessage({ type: "GET_VERSION" }); }
+    catch { window.clearTimeout(versionTimer); showUpdate(worker); }
+  }
+
   function acceptUpdate(event) {
     if (!waitingWorker || reloadForUpdate) return;
     reloadForUpdate = true;
+    window.clearTimeout(versionTimer);
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
     if (updateButton) updateButton.disabled = true;
     if (event?.currentTarget && "disabled" in event.currentTarget) event.currentTarget.disabled = true;
@@ -59,6 +71,15 @@
   });
   navigator.serviceWorker.addEventListener("message", event => {
     if (event.data?.type === "PLAYGROUND_SHELL_READY" && offlineStatus) offlineStatus.textContent = "All games ready offline";
+    if (event.data?.type === "PLAYGROUND_VERSION" && waitingWorker && event.source === waitingWorker && !reloadForUpdate) {
+      window.clearTimeout(versionTimer);
+      if (pageVersion && event.data.version === pageVersion) {
+        waitingWorker.postMessage({ type: "SKIP_WAITING" });
+        waitingWorker = null;
+        if (updatePanel) updatePanel.hidden = true;
+        document.querySelector("[data-playground-update]")?.remove();
+      } else showUpdate(waitingWorker);
+    }
   });
 
   window.addEventListener("beforeinstallprompt", event => {
@@ -86,14 +107,19 @@
   window.addEventListener("load", async () => {
     try {
       const registration = await navigator.serviceWorker.register(new URL("service-worker.js", root), { scope: root.pathname, updateViaCache: "none" });
-      if (registration.waiting) showUpdate(registration.waiting);
+      if (registration.waiting) checkUpdate(registration.waiting);
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
-        worker?.addEventListener("statechange", () => { if (worker.state === "installed" && navigator.serviceWorker.controller) showUpdate(registration.waiting || worker); });
+        worker?.addEventListener("statechange", () => { if (worker.state === "installed" && navigator.serviceWorker.controller) checkUpdate(registration.waiting || worker); });
       });
+      const checkForUpdate = () => {
+        if (!document.hidden) registration.update().catch(() => {});
+      };
+      document.addEventListener("visibilitychange", checkForUpdate);
+      window.addEventListener("pageshow", event => { if (event.persisted) checkForUpdate(); });
       const ready = await navigator.serviceWorker.ready;
       (ready.active || navigator.serviceWorker.controller)?.postMessage({ type: "CHECK_SHELL_READY" });
-      registration.update().catch(() => {});
+      checkForUpdate();
     } catch {
       if (offlineStatus) offlineStatus.textContent = "Offline setup failed — reconnect and reload to retry";
     }
