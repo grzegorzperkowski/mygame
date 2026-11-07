@@ -7,8 +7,6 @@ Nested URLs stay `/mygame/apps/<id>/`. The games themselves live in their own pu
 ## PWA behavior
 
 - One installation covers the launcher and all seven nested games under `/mygame/`.
-- In the installed PWA, Solitaire opens in a full-viewport frame at `/mygame/#solitaire`; card sizing stays unchanged. Supporting browsers cancel same-document Back while the game is open; **← Playground** returns explicitly. Without Navigation API support, Back retains its normal behavior. Native phone gestures require device validation.
-- Direct installed-PWA Solitaire URLs enter the same shell automatically. Ordinary browser tabs and the other games keep their existing navigation. Reloading a hosted game's accepted update reloads the entire shell and restores the game route/save.
 - The first successful online load prepares the complete app shell for offline use. The status changes to **All games ready offline** when caching finishes.
 - Playground requests persistent browser storage when the user installs the app or first presses a game card; there is no separate persistence button.
 - Updates are checked on load, when the app returns to the foreground (including resuming the Android PWA), and when a visible page is restored from the browser's back-forward cache. Offline checks fail silently and retry on the next return.

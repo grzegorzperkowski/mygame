@@ -7,19 +7,16 @@ const source = readFileSync(require("node:path").join(__dirname, "../pwa/registe
 const workerSource = readFileSync(require("node:path").join(__dirname, "../service-worker.js"), "utf8");
 const flush = () => new Promise(setImmediate);
 
-async function openApp({ pageVersion = "111111111111", waitingVersion, legacyWorker = false, gamePage = false, hostedGame = false, directGame = false, standalone = true } = {}) {
+async function openApp({ pageVersion = "111111111111", waitingVersion, legacyWorker = false, gamePage = false } = {}) {
   const panel = { hidden: true };
   const button = new EventTarget();
   const notices = [];
-  const breadcrumb = new EventTarget();
-  const parentMessages = [];
   const document = Object.assign(new EventTarget(), {
     hidden: false,
     currentScript: { src: "https://example.com/mygame/pwa/register.js" },
     querySelector: selector => ({
       "#update-panel": gamePage ? null : panel, "#update-button": gamePage ? null : button,
       "[data-playground-build]": { dataset: { playgroundBuild: pageVersion } },
-      "[data-playground-breadcrumb]": hostedGame ? breadcrumb : null,
       "[data-playground-update]": notices[0]
     })[selector] || null,
     body: { append(notice) { notices.push(notice); } },
@@ -32,21 +29,14 @@ async function openApp({ pageVersion = "111111111111", waitingVersion, legacyWor
     }
   });
   let reloads = 0;
-  let redirect = null;
-  const location = {
-    protocol: "https:", origin: "https://example.com", pathname: directGame ? "/mygame/apps/solitaire/index.html" : "/mygame/",
-    replace(url) { redirect = url; },
-    reload() { reloads++; window.dispatchEvent(new Event("pagehide")); }
-  };
+  const location = { protocol: "https:", reload() { reloads++; window.dispatchEvent(new Event("pagehide")); } };
   const timers = new Map();
   let timerId = 0;
   const window = Object.assign(new EventTarget(), {
-    isSecureContext: true, location, matchMedia: () => ({ matches: standalone }),
+    isSecureContext: true, location, matchMedia: () => ({ matches: true }),
     setTimeout(callback) { timers.set(++timerId, callback); return timerId; },
     clearTimeout(id) { timers.delete(id); }
   });
-  window.parent = hostedGame ? { postMessage(data, origin) { parentMessages.push({ data, origin }); } } : window;
-  if (hostedGame) window.frameElement = { id: "playground-solitaire" };
   const active = { postMessage() {} };
   let checks = 0;
   let offline = false;
@@ -109,54 +99,18 @@ async function openApp({ pageVersion = "111111111111", waitingVersion, legacyWor
   window.dispatchEvent(new Event("load"));
   await flush();
   return {
-    document, window, panel, serviceWorker, notices, parentMessages,
+    document, window, panel, serviceWorker, notices,
     get checks() { return checks; }, get reloads() { return reloads; },
-    get redirect() { return redirect; },
     get activations() { return activations; },
     get waitingWorker() { return registration.waiting; },
     deploy(version = "222222222222") { updateVersion = version; },
     clickReload() { button.dispatchEvent(new Event("click")); },
-    clickBreadcrumb(modified = false) {
-      const event = Object.assign(new Event("click", { cancelable: true }), { button: 0, ctrlKey: modified });
-      breadcrumb.dispatchEvent(event); return event.defaultPrevented;
-    },
     runTimers() { for (const [id, callback] of [...timers]) { timers.delete(id); callback(); } },
     setOffline(value) { offline = value; },
     setHidden(value) { document.hidden = value; document.dispatchEvent(new Event("visibilitychange")); },
     pageshow(persisted) { window.dispatchEvent(Object.assign(new Event("pageshow"), { persisted })); }
   };
 }
-
-test("hosted Solitaire returns through its parent with an exact target origin", async () => {
-  const app = await openApp({ hostedGame: true });
-  assert.equal(app.clickBreadcrumb(true), false);
-  assert.equal(app.parentMessages.length, 0);
-  assert.equal(app.clickBreadcrumb(), true);
-  assert.equal(app.parentMessages[0].data.type, "PLAYGROUND_EXIT_SOLITAIRE");
-  assert.equal(app.parentMessages[0].origin, "https://example.com");
-});
-
-test("direct standalone Solitaire enters the shell without an iframe redirect loop", async () => {
-  const direct = await openApp({ directGame: true });
-  assert.equal(direct.redirect, "https://example.com/mygame/index.html#solitaire");
-  assert.equal(direct.checks, 0);
-  const hosted = await openApp({ directGame: true, hostedGame: true });
-  assert.equal(hosted.redirect, null);
-  assert.equal(hosted.checks, 1);
-  const browser = await openApp({ directGame: true, standalone: false });
-  assert.equal(browser.redirect, null);
-  assert.equal(browser.checks, 1);
-});
-
-test("a hosted game's accepted update reloads the whole shell", async () => {
-  const app = await openApp({ hostedGame: true, waitingVersion: "222222222222" });
-  app.clickReload();
-  await flush();
-  assert.equal(app.reloads, 0);
-  assert.equal(app.parentMessages.length, 1);
-  assert.equal(app.parentMessages[0].data.type, "PLAYGROUND_RELOAD");
-  assert.equal(app.parentMessages[0].origin, "https://example.com");
-});
 
 test("returning to the PWA detects a deployment and shows the banner without reloading", async () => {
   const app = await openApp();
