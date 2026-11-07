@@ -80,6 +80,10 @@ jobs:
         working-directory: site
         run: pwsh -File scripts/sync-apps.ps1 -SourcesRoot "${{ github.workspace }}/sources"
 
+      - name: Check launcher behavior
+        working-directory: site
+        run: node --test
+
       - name: Check assembled tree
         working-directory: site
         run: pwsh -File scripts/sync-apps.ps1 -SourcesRoot "${{ github.workspace }}/sources" -Check

@@ -4,7 +4,26 @@
   if (window.__playgroundPwaRegistrationStarted) return;
   window.__playgroundPwaRegistrationStarted = true;
 
+  const hostedGame = window.parent !== window && window.frameElement?.id === "playground-solitaire";
+  if (hostedGame) {
+    document.querySelector("[data-playground-breadcrumb]")?.addEventListener("click", event => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      window.parent.postMessage({ type: "PLAYGROUND_EXIT_SOLITAIRE" }, location.origin);
+    });
+  }
+  function reloadPage() {
+    if (hostedGame) window.parent.postMessage({ type: "PLAYGROUND_RELOAD" }, location.origin);
+    else window.location.reload();
+  }
+
   const root = new URL("../", document.currentScript.src);
+  const solitairePath = new URL("apps/solitaire/", root).pathname;
+  if (!hostedGame && isStandalone()
+    && (location.pathname === solitairePath || location.pathname === `${solitairePath}index.html`)) {
+    window.location.replace(new URL("index.html#solitaire", root).href);
+    return;
+  }
   const installButton = document.querySelector("#install-button");
   const installHelp = document.querySelector("#install-help");
   const offlineStatus = document.querySelector("#offline-status");
@@ -22,7 +41,7 @@
     if (!reloadForUpdate || reloading) return;
     reloading = true;
     window.clearTimeout(reloadTimer);
-    window.location.reload();
+    reloadPage();
   }
 
   function isStandalone() {
@@ -67,7 +86,7 @@
     if (!reloadForUpdate || reloading || controllerTried) return;
     controllerTried = true;
     window.addEventListener("pagehide", () => { reloading = true; window.clearTimeout(reloadTimer); }, { once: true });
-    window.location.reload();
+    reloadPage();
   });
   navigator.serviceWorker.addEventListener("message", event => {
     if (event.data?.type === "PLAYGROUND_SHELL_READY" && offlineStatus) offlineStatus.textContent = "All games ready offline";
